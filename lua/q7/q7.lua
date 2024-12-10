@@ -44,10 +44,10 @@ local function printStack(s)
     for _, state in pairs(s) do
         io.write("{", state[1], ", ", state[2], "} ")
     end
-    io.write("\n")
+    io.write("}\n")
 end
 
-local function dfs(line)
+local function dfs(line, concatenation)
     local target = line[1]
     local nums   = line[2]
     local stack  = {{nums[1], 1}, {nums[1], 1}}
@@ -60,6 +60,7 @@ local function dfs(line)
         elseif idx < #nums then
             stack[#stack+1] = {curr + nums[idx + 1], idx + 1}
             stack[#stack+1] = {curr * nums[idx + 1], idx + 1}
+            if concatenation then stack[#stack+1] = {tonumber(curr .. nums[idx + 1]), idx + 1} end
         end
         if enablePrint then printStack(stack) end
     end
@@ -67,10 +68,10 @@ local function dfs(line)
     return false
 end
 
-local function sumPossibleEquations(lines)
+local function sumPossibleEquations(lines, concatenation)
     local total = 0
     for _, l in pairs(lines) do
-        if dfs(l) then total = total + l[1] end
+        if dfs(l, concatenation) then total = total + l[1] end
     end
     return total
 end
@@ -84,5 +85,6 @@ if enablePrint then
     end
 end
 
-local partOneResult = sumPossibleEquations(lines)
-print(partOneResult)
+local partOneResult = sumPossibleEquations(lines, false)
+local partTwoResult = sumPossibleEquations(lines, true)
+io.write(partOneResult, "\n", partTwoResult, "\n")
