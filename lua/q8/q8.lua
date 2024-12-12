@@ -38,6 +38,37 @@ local function getAntennas(m)
     return antennas
 end
 
+local function getPoint(m, x1, y1, x)
+    return m * (x - x1) + y1
+end
+
+local function placeAntinodes(m, p1, p2)
+    local antinodes = {}
+    for i, row in pairs(m) do
+        antinodes[i] = {}
+        for j, v in pairs(row) do
+            antinodes[i][j] = v
+        end
+    end
+    local ROWS, COLS = #antinodes, #antinodes[1]
+    local x1, y1 = p1[2], p1[1]
+    local x2, y2 = p2[2], p2[1]
+
+    for i = 1, COLS do
+        local slope = ((y1 - y2) / (x1 - x2))
+        local ax, ay = i, getPoint(slope, x1, y1, i)
+        local ayIsWholeNum = ay == math.floor(ay)
+        if (ayIsWholeNum and
+            1 <= ax and ax <= COLS and
+            1 <= ay and ay <= ROWS)
+        then
+            antinodes[ay][ax] = "#"
+        end
+    end
+
+    return antinodes
+end
+
 local function getAntinodes(m, a)
     local ROWS, COLS = #m, #m[1]
     local antinodes = {}
@@ -51,37 +82,7 @@ local function getAntinodes(m, a)
     for _, points in pairs(a) do
         for i = 1, #points do
             for j = i + 1, #points do
-                local x1, y1 = points[i][2], points[i][1]
-                local x2, y2 = points[j][2], points[j][1]
-                local dx, dy = math.abs(x1 - x2), math.abs(y1 - y2)
-
-
-                local ax1, ay1, ax2, ay2
-                if x1 <= x2 then
-                    ax1 = x1 - dx
-                    ax2 = x2 + dx
-                else
-                    ax1 = x1 + dx
-                    ax2 = x2 - dx
-                end
-                if y1 <= y2 then
-                    ay1 = y1 - dy
-                    ay2 = y2 + dy
-                else
-                    ay1 = y1 + dy
-                    ay2 = y2 - dy
-                end
-
-                if (1 <= ax1 and ax1 <= COLS and
-                    1 <= ay1 and ay1 <= ROWS)
-                then
-                    antinodes[ay1][ax1] = "#"
-                end
-                if (1 <= ax2 and ax2 <= COLS and
-                    1 <= ay2 and ay2 <= ROWS)
-                then
-                    antinodes[ay2][ax2] = "#"
-                end
+                antinodes = placeAntinodes(antinodes, points[i], points[j])
             end
         end
     end
@@ -102,4 +103,5 @@ end
 local map = getInput(filename)
 local antennas = getAntennas(map)
 local antinodes = getAntinodes(map, antennas)
+printMap(antinodes)
 print(countUniqueAntinodes(antinodes))
