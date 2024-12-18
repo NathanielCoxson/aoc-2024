@@ -4,7 +4,8 @@ local numRows, numCols = 103, 101
 local function printTable2D(t)
     for i, _ in pairs(t) do
         for j, _ in pairs(t[i]) do
-            io.write(t[i][j], " ")
+            if t[i][j] ~= 0 then io.write(t[i][j], "")
+            else io.write(".") end
         end
         io.write("\n")
     end
@@ -68,7 +69,29 @@ local function getSafetyFactor(map)
     return q1 * q2 * q3 * q4
 end
 
+local function unique(map)
+    for i, _ in pairs(map) do
+        for j, _ in pairs(map[i]) do
+            if map[i][j] > 1 then return false end
+        end
+    end
+    return true
+end
+
 local robots = getData(inputFile)
-for _ = 1, 100 do update(numRows, numCols, robots) end
-local map = getMap(numRows, numCols, robots)
-print(getSafetyFactor(map))
+--for _ = 1, 100 do update(numRows, numCols, robots) end
+--local map = getMap(numRows, numCols, robots)
+--print(getSafetyFactor(map))
+
+local second = 1
+while true do
+    update(numRows, numCols, robots)
+    local map = getMap(numRows, numCols, robots)
+    if unique(map) then
+        printTable2D(map)
+        print(second)
+        break
+    end
+    print(second)
+    second = second + 1
+end
