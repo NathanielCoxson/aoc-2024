@@ -464,6 +464,150 @@ local function getNext(v, scores)
     return state
 end
 
+local function copyList(t)
+    local copy = {}
+    for k, v in pairs(t) do copy[k] = v end
+    return copy
+end
+
+local function dfs(maze, s, startRow, startCol, target)
+    local ROWS, COLS = #maze, #maze[1]
+    local endPos = getEnd(maze)
+    local v = {}
+    v[stateToString(startRow, startCol, 1)] = true
+    local stack = {{startRow, startCol, 1, 0, v}}
+    local bestPathSquares = {}
+    local dirs = {}
+    dirs[0] = {-1,0}
+    dirs[1] = {0, 1}
+    dirs[2] = {1, 0}
+    dirs[3] = {0, -1}
+
+    while #stack > 0 do
+        local state = table.remove(stack, #stack)
+        local r, c = state[1], state[2]
+        local dir = state[3]
+        local cost = state[4]
+        local visited = state[5]
+        visited[stateToString(r,c,dir)] = true
+        if cost > target then goto continue
+        elseif cost == target and r == endPos[1] and c == endPos[2] then
+            for k, _ in pairs(visited) do
+                bestPathSquares[k] = true
+            end
+        end
+
+        local dr, dc = r + dirs[dir][1], c + dirs[dir][2]
+        if (1 <= dr and dr <= ROWS and
+            1 <= dc and dc <= COLS and
+            maze[dr][dc] ~= "#" and
+            not visited[stateToString(dr,dc,dir)])
+        then
+            local copy = copyList(visited)
+            copy[stateToString(r,c,dir)] = true
+            stack[#stack+1] = {dr, dc, dir, cost + 1, copy}
+        end
+        if not visited[stateToString(r,c,(dir+1)%4)] then
+            local copy = copyList(visited)
+            copy[stateToString(r,c,dir)] = true
+            stack[#stack+1] = {r, c, (dir+1)%4, cost + 1000, copy}
+        end
+        if not visited[stateToString(r,c,(dir-1)%4)] then
+            local copy = copyList(visited)
+            copy[stateToString(r,c,dir)] = true
+            stack[#stack+1] = {r, c, (dir-1)%4, cost + 1000, copy}
+        end
+        ::continue::
+    end
+
+    local mazeCopy = {}
+    for i = 1, ROWS do
+        mazeCopy[i] = {}
+        for j = 1, COLS do
+            mazeCopy[i][j] = maze[i][j]
+        end
+    end
+    local statePattern = "(%d+),(%d+),(%d+)"
+    local count = 0
+    for k, _ in pairs(bestPathSquares) do
+        local _, _, i, j, _ = string.find(k, statePattern)
+        i = tonumber(i)
+        j = tonumber(j)
+        if i ~= nil and j ~= nil and mazeCopy[i][j] ~= "O" then
+            mazeCopy[i][j] = "O"
+            count = count + 1
+        end
+    end
+
+    for i, _ in pairs(mazeCopy) do
+        for j, _ in pairs(mazeCopy[i]) do
+            io.write(mazeCopy[i][j])
+        end
+        io.write("\n")
+    end
+    print(count)
+end
+
+local function backtrack(maze, s, prev, target)
+    local ROWS, COLS = #maze, #maze[1]
+    local endPos = getEnd(maze)
+    local stack = {}
+    local points = {}
+    local starts = {}
+
+    local mazeCopy = {}
+    for i = 1, ROWS do
+        mazeCopy[i] = {}
+        for j = 1, COLS do
+            mazeCopy[i][j] = maze[i][j]
+        end
+    end
+
+    for i = 0, 3 do
+        if s[stateToString(endPos[1],endPos[2],i)] == target then stack[#stack+1] = stateToString(endPos[1],endPos[2],i) end
+    end
+    local statePattern = "(%d+),(%d+),(%d+)"
+    while #stack > 0 do
+        local state = table.remove(stack, #stack)
+        local _, _, i, j, d = string.find(state, statePattern)
+        i = tonumber(i)
+        j = tonumber(j)
+        d = tonumber(d)
+
+        if i == nil or j == nil or d == nil then goto continue end
+
+        mazeCopy[i][j] = "O"
+
+        if d == 0 and s[stateToString(i+1,j,d)] ~= nil and s[state] > s[stateToString(i+1,j,d)] then
+            stack[#stack+1] = stateToString(i+1,j,d)
+        elseif d == 1 and s[stateToString(i,j-1,d)] ~= nil and s[state] > s[stateToString(i,j-1,d)] then
+            stack[#stack+1] = stateToString(i,j-1,d)
+        elseif d == 2 and s[stateToString(i-1,j,d)] ~= nil and s[state] > s[stateToString(i-1,j,d)] then
+            stack[#stack+1] = stateToString(i-1,j,d)
+        elseif d == 3 and s[stateToString(i,j+1,d)] ~= nil and s[state] > s[stateToString(i,j+1,d)] then
+            stack[#stack+1] = stateToString(i,j+1,d)
+        end
+        if s[stateToString(i,j,(d+1)%4)] ~= nil and s[state] > s[stateToString(i,j,(d+1)%4)] then
+            stack[#stack+1] = stateToString(i,j,(d+1)%4)
+        end
+        if s[stateToString(i,j,(d-1)%4)] ~= nil and s[state] > s[stateToString(i,j,(d-1)%4)] then
+            stack[#stack+1] = stateToString(i,j,(d-1)%4)
+        end
+
+        ::continue::
+    end
+
+    local count = 0
+    for i, _ in pairs(mazeCopy) do
+        for j, _ in pairs(mazeCopy[i]) do
+            if mazeCopy[i][j] == "O" then count = count + 1 end
+            io.write(mazeCopy[i][j])
+        end
+        io.write("\n")
+    end
+    print("Part 2:", count)
+end
+
 local function lowestScore(maze)
     local ROWS, COLS = #maze, #maze[1]
     local start = getStart(maze)
@@ -475,6 +619,7 @@ local function lowestScore(maze)
     local visited = {}
     local graph = {}
     local score = {}
+    local prev = {}
     for i, _ in pairs(maze) do
         for j, _ in pairs(maze[i]) do
             if maze[i][j] == "#" then goto continue end
@@ -498,11 +643,14 @@ local function lowestScore(maze)
         end
     end
     score[stateToString(start[1],start[2],1)] = 0
+    prev[stateToString(start[1],start[2],1)] = {}
     insert(unvisited, {0, stateToString(start[1], start[2], 1)})
     visited[stateToString(start[1],start[2],1)] = true
 
     local statePattern = "(%d+),(%d+),(%d+)"
+    local iter = 0
     while size(unvisited) > 0 do
+        iter = iter + 1
         local state = pop(unvisited)
         if state == nil or state[1] == nil or state[2] == nil then goto continue end
 
@@ -513,9 +661,17 @@ local function lowestScore(maze)
             local _, _, _, _, ad = string.find(adj, statePattern)
             if not visited[adj] then
                 if d ~= ad then
-                    score[adj] = math.min(score[adj], cost + 1000)
+                    if cost + 1000 <= score[adj] then
+                        score[adj] = cost + 1000
+                        if prev[adj] == nil then prev[adj] = {} end
+                        prev[adj][#prev[adj]+1] = state[2]
+                    end
                 else
-                    score[adj] = math.min(score[adj], cost + 1)
+                    if cost + 1 <= score[adj] then
+                        score[adj] = cost + 1
+                        if prev[adj] == nil then prev[adj] = {} end
+                        prev[adj][#prev[adj]+1] = state[2]
+                    end
                 end
                 insert(unvisited, {score[adj], adj})
                 visited[adj] = true
@@ -527,7 +683,9 @@ local function lowestScore(maze)
     for i = 0, 3 do
         min = math.min(min, score[stateToString(endPos[1],endPos[2],i)])
     end
-    print(min)
+    --print(dfs(maze, score, start[1], start[2], min))
+    backtrack(maze, score, prev, min)
+    print("Part 1:", min)
 end
 
 local maze = getMaze(inputFile)
