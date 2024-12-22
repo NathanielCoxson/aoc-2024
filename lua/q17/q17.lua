@@ -1,4 +1,4 @@
-local inputFile = "q17.in.txt"
+local inputFile = "q17.in2.txt"
 
 local function getInput(filename)
     local file = assert(io.open(filename, "r"))
@@ -75,16 +75,77 @@ local function runProgram(input)
         --print(ptr, opcode, operand, A, B, C)
     end
 
-    print("Output:")
-    print("A: ", A, "B: ", B, "C: ", C)
+    --print("Output:")
+    --print("A: ", A, "B: ", B, "C: ", C)
+    local result = ""
     for i, n in pairs(output) do
-        io.write(n)
-        if i ~= #output then io.write(",") end
+        result = result .. n
+        --io.write(n)
+        if i ~= #output then
+            --result = result .. ","
+            --io.write(",")
+        end
     end
-    print()
 
-    return output
+    return result
 end
 
-getInput(inputFile)
-runProgram(getInput(inputFile))
+-- Take lowest 3 bits of A store them in B
+-- XOR B with 2 and store in B
+-- Right shift A by B and store in C
+-- XOR B with C and store in B
+-- XOR B with 3 and store in B
+-- Output lowest 3 bits of B
+-- Shift A by 3 and store in A
+-- Jump to 0
+
+local function findA(target, input)
+    local ras = {}
+    for i = 0, 7 do
+        input[1] = i
+        local output = runProgram(input)
+        if output == string.sub(target, #target - #output + 1, #target) then
+            ras[#ras+1] = i
+        end
+    end
+
+    local octal_digit_count = 1
+    while octal_digit_count < 16 do
+        local new_ras = {}
+        for _, a in pairs(ras) do
+            a = a * 8
+            for i = 0, 7 do
+                input[1] = a + i
+                local output = runProgram(input)
+                if output == string.sub(target, #target - #output + 1, #target) then
+                    new_ras[#new_ras+1] = a + i
+                end
+            end
+        end
+        ras = {}
+        for _, d in pairs(new_ras) do ras[#ras+1] = d end
+        octal_digit_count = octal_digit_count + 1
+    end
+
+    local min = math.huge
+    for _, d in pairs(ras) do
+        min = math.min(min, d)
+    end
+    return min
+end
+
+local input = getInput(inputFile)
+local target = ""
+for _, inst in pairs(input[4]) do
+    target = target .. inst[1]
+    target = target .. inst[2]
+end
+
+local output = runProgram(getInput("q17.in.txt"))
+local result = ""
+for i = 1, #output do
+    result = result .. string.sub(output, i, i)
+    if i ~= #output then result = result .. "," end
+end
+print("Part 1:", result)
+print("Part 2:", findA(target, input))
