@@ -39,12 +39,37 @@ local function canMakeTowel(target, segments)
     return dp[#dp]
 end
 
+local function canMakeTowel2(target, segments)
+    local dp = {}
+    for i = 1, #target do
+        dp[i] = 0
+    end
+    dp[0] = 1
+
+    for i = 1, #target do
+        for _, s in pairs(segments) do
+            if string.sub(target, i, i + #s - 1) == s then
+                dp[i + #s - 1] = dp[i + #s - 1] + dp[i - 1]
+            end
+        end
+    end
+
+    return dp[#dp]
+end
+
 local data = getInput(inputFile)
 local segments = data[1]
 local testCases = data[2]
 
 local count = 0
-for i, case in pairs(testCases) do
+for _, case in pairs(testCases) do
     if canMakeTowel(case, segments) then count = count + 1 end
 end
 print("Part 1:", count)
+
+count = 0
+for _, case in pairs(testCases) do
+    local c = canMakeTowel2(case, segments)
+    count = count + c
+end
+print("Part 2:",  count)
