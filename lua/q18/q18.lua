@@ -79,9 +79,13 @@ for i = 1, rows do
     end
 end
 
-for i = 1, 1024 do
-    map[bytes[i][1]+1][bytes[i][2]+1] = "#"
+for i, byte in pairs(bytes) do
+    map[byte[1]+1][byte[2]+1] = "#"
+    local pathLength = bfs(map)
+
+    if i == 1024 then print("Part 1:", pathLength)
+    elseif pathLength == -1 then
+        print("Part 2:", byte[2]..","..byte[1])
+        break
+    end
 end
-
-print(bfs(map))
-
