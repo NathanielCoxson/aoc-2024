@@ -87,8 +87,6 @@ local function findCheats(m)
                         m[dr][dc] ~= "#" and m[idr][idc] ~= "#")
                     then
                         local newDist = maxDist - math.abs(distMap[dr][dc][1] - distMap[idr][idc][1]) + 2
-                        --io.write(newDist, " ", distMap[dr][dc][1], " ", distMap[idr][idc][1], " ", "(", dr, ",", dc, ")", "(", i, ",", j, ")", "(", idr, ",", idc, ")", "\n")
-
                         if cheats[maxDist - newDist] == nil then cheats[maxDist - newDist] = 0 end
                         cheats[maxDist - newDist] = cheats[maxDist - newDist] + 1
                     end
@@ -96,7 +94,40 @@ local function findCheats(m)
             end
         end
     end
-    for i, c in pairs(cheats) do cheats[i] = cheats[i] // 2 end
+    for i, _ in pairs(cheats) do cheats[i] = cheats[i] // 2 end
+    return cheats
+end
+
+local function findCheats2(m)
+    local ROWS, COLS = #m, #m[1]
+    local distMap = getDistMap(m)
+    local endPos = findChar(m, "E")
+    local maxDist = distMap[endPos[1]][endPos[2]][1]
+    local cheats = {}
+    local cheatTime = 20
+
+    for i = 1, ROWS do
+        for j = 1, COLS do
+            if m[i][j] ~= "#" then
+                for dy = -20, 20, 1 do
+                    for dx = -20, 20, 1 do
+                        local y, x  = i + dy, j + dx
+                        local manhattan = math.abs(i - y) + math.abs(j - x)
+                        if (1 <= y and y <= ROWS and
+                            1 <= x and x <= COLS and
+                            m[y][x] ~= "#" and
+                            manhattan <= cheatTime)
+                        then
+                            local newDist = maxDist - math.abs(distMap[i][j][1] - distMap[y][x][1]) + manhattan
+                            if cheats[maxDist - newDist] == nil then cheats[maxDist - newDist] = 0 end
+                            cheats[maxDist - newDist] = cheats[maxDist - newDist] + 1
+                        end
+                    end
+                end
+            end
+        end
+    end
+    for i, _ in pairs(cheats) do cheats[i] = cheats[i] // 2 end
     return cheats
 end
 
@@ -108,3 +139,11 @@ for dt, c in pairs(cheats) do
     if dt >= minTimeSave then count = count + c end
 end
 print("Part 1:", count)
+
+cheats = findCheats2(map)
+minTimeSave = 100
+count = 0
+for dt, c in pairs(cheats) do
+    if dt >= minTimeSave then count = count + c end
+end
+print("Part 2:", count)
