@@ -118,6 +118,56 @@ local function getNumericPartOfCode(code)
     return tonumber(n)
 end
 
+local function getFrequencies(seq)
+    local freq = {}
+    for inst in string.gmatch(seq, "[^A]*A") do
+        if freq[inst] == nil then freq[inst] = 0 end
+        freq[inst] = freq[inst] + 1
+    end
+    return freq
+end
+
+local function part2(codes, numDirRobots)
+    local complexity = 0
+    for _, code in pairs(codes) do
+        local sequence = ""
+        local prev = "A"
+        local frequencies = {}
+        for i = 1, #code do
+            local current = string.sub(code, i, i)
+            sequence = sequence .. getNumpadMoveSequence(prev, current)
+            prev = current
+            frequencies = getFrequencies(sequence)
+        end
+
+        for _ = 1, numDirRobots do
+            local subTable = {}
+            for inst, freq in pairs(frequencies) do
+                local subInst = ""
+                local p = "A"
+                for i = 1, #inst do
+                    local current = string.sub(inst, i, i)
+                    subInst = subInst .. getDpadMoveSequence(p, current)
+                    p = current
+                end
+
+                for k, f in pairs(getFrequencies(subInst)) do
+                    if subTable[k] == nil then subTable[k] = 0 end
+                    subTable[k] = subTable[k] + f * freq
+                end
+            end
+            frequencies = subTable
+        end
+
+        local length = 0
+        for k, f in pairs(frequencies) do
+            length = length + (#k * f)
+        end
+        complexity = complexity + (length * getNumericPartOfCode(code))
+    end
+    return complexity
+end
+
 local codes = getInput(inputFile)
 
 local complexitySum = 0
@@ -153,3 +203,6 @@ for _, code in pairs(codes) do
     if enablePrint then io.write(code, ": ", num, ",\t", length, ",\t", complexity, ",\t", step3, "\n") end
 end
 print("Part 1:", complexitySum)
+
+local complexity = part2(codes, 25)
+print("Part 2:", complexity)
