@@ -56,7 +56,7 @@ local function getLocalGroups(g, p)
                 local newPath = copyList(path)
                 local newSeen = copyList(seen)
                 newPath[#newPath+1] = neighbor
-                seen[neighbor] = true
+                newSeen[neighbor] = true
                 stack[#stack+1] = {neighbor, copyList(newPath), copyList(newSeen)}
             end
         end
@@ -85,9 +85,64 @@ local function getGroups(g)
     return groups
 end
 
+local function union(a, b)
+    local result = {}
+    for n, _ in pairs(a) do
+        result[n] = true
+    end
+    for n, _ in pairs(b) do
+        result[n] = true
+    end
+    return result
+end
+
+local function intersection(a, b)
+    local result = {}
+    for n, _ in pairs(a) do
+        if b[n] ~= nil then result[n] = true end
+    end
+    for n, _ in pairs(b) do
+        if a[n] ~= nil then result[n] = true end
+    end
+    return result
+end
+
+local function complement(a, b)
+    local result = {}
+    for n, _ in pairs(a) do
+        if b[n] == nil then result[n] = true end
+    end
+    return result
+end
+
+local max = {}
+local maxLength = 0
 local graph = getInput(inputFile)
 local groups = getGroups(graph)
+local vertices = {}
+for v, _ in pairs(graph) do vertices[v] = true end
 
+-- Algorithm used s Bron-Kerbosch algorithm
+-- to find maximally connected subsets of an undirected graph
+-- found here:
+-- https://en.wikipedia.org/wiki/Bron%E2%80%93Kerbosch_algorithm
+local function getLargestGroup(R, P, X)
+    if getLength(P) == 0 and getLength(X) == 0 then
+        if getLength(R) > maxLength then
+            maxLength = getLength(R)
+            max = copyList(R)
+        end
+    end
+
+    for v, _ in pairs(P) do
+        getLargestGroup(union(R, {[v]=true}), intersection(P, graph[v]), intersection(X, graph[v]))
+        P = complement(P, {[v]=true})
+        X = union(X, {[v]=true})
+    end
+end
+
+
+-- Part 1
 local part1 = 0
 for _, g in pairs(groups) do
     for _, v in pairs(g) do
@@ -98,3 +153,18 @@ for _, g in pairs(groups) do
     end
 end
 print("Part 1:", part1)
+
+-- Part 2
+getLargestGroup({}, vertices, {})
+local part2 = {}
+for v, _ in pairs(max) do
+    part2[#part2+1] = v
+end
+table.sort(part2)
+
+io.write("Part 2: ")
+for i, v in pairs(part2) do
+    io.write(v)
+    if i ~= #part2 then io.write(",") end
+end
+io.write("\n")
