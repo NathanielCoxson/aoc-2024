@@ -11,6 +11,10 @@ function utils.getData(filename)
     return lines
 end
 
-function utils.hello() print("Hello") end
+function utils.copyTable(t)
+    local copy = {}
+    for k, v in pairs(t) do copy[k] = v end
+    return copy
+end
 
 return utils
