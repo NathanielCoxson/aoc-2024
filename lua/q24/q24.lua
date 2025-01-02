@@ -40,7 +40,6 @@ local function getInput(data)
 end
 
 local function renameSimulation(gates, instructions)
-    local renamed = {}
     local remap = {}
     while #instructions > 0 do
         for i = #instructions, 1, -1 do
@@ -52,8 +51,6 @@ local function renameSimulation(gates, instructions)
                 goto continue
             end
 
-            print(a,b, c,op)
-
             if op == "OR" then
                 gates[c] = gates[a] | gates[b]
             elseif op == "AND" then
@@ -62,12 +59,48 @@ local function renameSimulation(gates, instructions)
                 gates[c] = gates[a] ~ gates[b]
             end
 
-            renamed[i] = utils.copyTable(inst)
+            local aFirstChar = string.sub(a, 1, 1)
+            local bFirstChar = string.sub(b, 1, 1)
+            local cFirstChar = string.sub(c, 1, 1)
+
+            local x_y_inputs = (aFirstChar == "x" and bFirstChar == "y") or (aFirstChar == "y" and bFirstChar == "x")
+            if x_y_inputs and op == "XOR" then
+                local aIndex = string.sub(a, 2, #a)
+                local bIndex = string.sub(b, 2, #b)
+                remap[c] = "S" .. aIndex
+                remap[a] = aFirstChar .. aIndex
+                remap[b] = bFirstChar .. bIndex
+            elseif x_y_inputs and op == "AND" then
+                local aIndex = string.sub(a, 2, #a)
+                local bIndex = string.sub(b, 2, #b)
+                remap[c] = "c" .. aIndex
+                remap[a] = aFirstChar .. aIndex
+                remap[b] = bFirstChar .. bIndex
+            elseif remap[a] ~= nil and remap[b] ~= nil then
+                local raFirstChar = string.sub(remap[a], 1, 1)
+                local rbFirstChar = string.sub(remap[b], 1, 1)
+                local _, _, index1 = string.find(remap[a], "(%d+)")
+                local _, _, index2 = string.find(remap[a], "(%d+)")
+                index1 = tonumber(index1)
+                index2 = tonumber(index2)
+                if type(index1) ~= "number" or type(index2) ~= "number" then goto continue end
+                local maxIndex = math.max(index1, index2)
+
+                local carrySum = op == "AND"
+                local outputCarry = op == "OR"
+                local outputBit = op == "XOR"
+
+                if carrySum then remap[c] = "s" .. maxIndex
+                elseif outputCarry then remap[c] = "C" .. maxIndex
+                elseif outputBit then remap[c] = "z" .. maxIndex end
+            end
+            --print(a, op, b, remap[c])
+
             table.remove(instructions, i)
             ::continue::
         end
     end
-    return renamed
+    return remap
 end
 
 local function runSimulation(gates, instructions)
@@ -120,13 +153,12 @@ local function getNumber(gates, pattern)
 end
 
 
-local gateMap = {}
-local function expandGate(instructions, name, enablePrint)
+local function expandGate(remap, instructions, name, enablePrint)
     local stack = {name}
 
     if enablePrint then
-        if gateMap[name] == nil then print(name)
-        else print(gateMap[name])
+        if remap[name] == nil then print(name)
+        else print(remap[name])
         end
     end
     while #stack > 0 do
@@ -137,18 +169,17 @@ local function expandGate(instructions, name, enablePrint)
                 stack[#stack+1] = inst["a"]
                 stack[#stack+1] = inst["b"]
 
-
                 if enablePrint then
-                    if gateMap[inst["a"]] == nil then io.write(inst["a"], " ")
-                    else io.write(gateMap[inst["a"]], " ") end
+                    if remap[inst["a"]] == nil then io.write(inst["a"], " ")
+                    else io.write(remap[inst["a"]], " ") end
 
                     io.write(inst["op"], " ")
 
-                    if gateMap[inst["b"]] == nil then io.write(inst["b"], " ")
-                    else io.write(gateMap[inst["b"]], " ") end
+                    if remap[inst["b"]] == nil then io.write(inst["b"], " ")
+                    else io.write(remap[inst["b"]], " ") end
 
-                    if gateMap[inst["c"]] == nil then io.write(inst["c"], " ")
-                    else io.write(gateMap[inst["c"]], " ") end
+                    if remap[inst["c"]] == nil then io.write(inst["c"], " ")
+                    else io.write(remap[inst["c"]], " ") end
 
                     io.write("\n")
                 end
@@ -168,7 +199,13 @@ print("x =", x)
 local y = getNumber(input["gates"], "(y..)")
 print("y =", y)
 print("z =", part1)
+print("expected: ", x + y)
 
 print()
-local renamed = renameSimulation(input["gates"], input["instructions"])
-expandGate(utils.copyTable(renamed), "z01", true)
+input = getInput(utils.getData(inputFile))
+local renamed = renameSimulation(input["gates"], utils.copyTable(input["instructions"]))
+local numGates = 0
+local numRemaped = 0
+for _, _ in pairs(input["gates"]) do numGates = numGates + 1 end
+for _, _ in pairs(renamed) do numRemaped = numRemaped + 1 end
+expandGate(utils.copyTable(renamed), utils.copyTable(input["instructions"]), "z08", true)
