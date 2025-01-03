@@ -155,6 +155,9 @@ end
 
 local function expandGate(remap, instructions, name, enablePrint)
     local stack = {name}
+    local _, _, index = string.find(name, "(%d+)")
+    index = tonumber(index)
+
 
     if enablePrint then
         if remap[name] == nil then print(name)
@@ -164,10 +167,16 @@ local function expandGate(remap, instructions, name, enablePrint)
     while #stack > 0 do
         local state = table.remove(stack, #stack)
 
+
         for _, inst in pairs(instructions) do
             if inst["c"] == state then
-                stack[#stack+1] = inst["a"]
-                stack[#stack+1] = inst["b"]
+                local _, _, leftIndex = string.find(remap[inst["a"]], "(%d+)")
+                local _, _, rightIndex = string.find(remap[inst["b"]], "(%d+)")
+                leftIndex = tonumber(leftIndex)
+                rightIndex = tonumber(rightIndex)
+
+                if leftIndex == index then stack[#stack+1] = inst["a"] end
+                if rightIndex == index then stack[#stack+1] = inst["b"] end
 
                 if enablePrint then
                     if remap[inst["a"]] == nil then io.write(inst["a"], " ")
@@ -181,6 +190,7 @@ local function expandGate(remap, instructions, name, enablePrint)
                     if remap[inst["c"]] == nil then io.write(inst["c"], " ")
                     else io.write(remap[inst["c"]], " ") end
 
+                    io.write(leftIndex, ", ", rightIndex)
                     io.write("\n")
                 end
             end
@@ -208,4 +218,8 @@ local numGates = 0
 local numRemaped = 0
 for _, _ in pairs(input["gates"]) do numGates = numGates + 1 end
 for _, _ in pairs(renamed) do numRemaped = numRemaped + 1 end
+local C2 = ""
+for k, v in pairs(renamed) do if string.sub(v, 1, 1) == "C" then print(k,v) end end
+print(C2)
 expandGate(utils.copyTable(renamed), utils.copyTable(input["instructions"]), "z08", true)
+
