@@ -117,7 +117,7 @@ mtg XOR vnm -> z06
 gdn OR pck -> wsr
 ttr OR nfj -> fbv
 jtn AND vtk -> wqs
-x08 XOR y08 -> qjb
+x08 XOR y08 -> gvw 
 dmm OR mmr -> nhk
 qqd AND cph -> bqd
 tqv AND www -> nnr
@@ -141,7 +141,7 @@ tpd OR djn -> qvc
 y18 AND x18 -> jdr
 pnd OR hwf -> vtk
 y26 AND x26 -> vqh
-vcs XOR dtj -> jbp
+vcs XOR dtj -> z35 
 x03 AND y03 -> wgg
 rjv OR fgf -> brq
 vjn AND tjg -> trg
@@ -177,7 +177,7 @@ tqq OR jjc -> tpn
 qgm OR mvb -> cqg
 dkg XOR ghb -> z02
 wrw AND hwh -> pkq
-hwm AND tdc -> z22
+hwm AND tdc -> drg 
 x02 AND y02 -> gws
 jfp OR mpd -> ncd
 y11 AND x11 -> smr
@@ -208,7 +208,7 @@ tpv XOR drk -> z14
 cjm XOR rws -> z19
 bqd OR hns -> mtg
 x20 XOR y20 -> jtn
-x08 AND y08 -> gvw
+x08 AND y08 -> qjb 
 cbc XOR cqg -> z34
 rgt AND fbv -> rfj
 wmd XOR qvh -> z12
@@ -230,7 +230,7 @@ mtg AND vnm -> rrh
 qvc AND mms -> tps
 x06 XOR y06 -> vnm
 tps OR jdr -> cjm
-fbv XOR rgt -> jgc
+fbv XOR rgt -> z15 
 y41 AND x41 -> wfd
 x19 XOR y19 -> rws
 hcg AND mnv -> cfk
@@ -292,17 +292,17 @@ hjt OR nqr -> crv
 vbd XOR jvs -> z44
 fbn OR cmn -> hcg
 x06 AND y06 -> dqs
-y15 AND x15 -> z15
+y15 AND x15 -> jgc 
 x33 XOR y33 -> jbr
 y21 XOR x21 -> jhm
 snh OR drg -> nbc
 y18 XOR x18 -> mms
 vqh OR gbg -> vvj
 y21 AND x21 -> mvd
-qrg OR ppf -> z35
+qrg OR ppf -> jbp 
 y10 AND x10 -> ktf
 x16 AND y16 -> tqq
-tdc XOR hwm -> drg
+tdc XOR hwm -> z22 
 wwc XOR nvv -> z01
 x17 AND y17 -> djn
 jpt XOR brq -> z43

@@ -80,7 +80,7 @@ local function renameSimulation(gates, instructions)
                 local raFirstChar = string.sub(remap[a], 1, 1)
                 local rbFirstChar = string.sub(remap[b], 1, 1)
                 local _, _, index1 = string.find(remap[a], "(%d+)")
-                local _, _, index2 = string.find(remap[a], "(%d+)")
+                local _, _, index2 = string.find(remap[b], "(%d+)")
                 index1 = tonumber(index1)
                 index2 = tonumber(index2)
                 if type(index1) ~= "number" or type(index2) ~= "number" then goto continue end
@@ -179,18 +179,11 @@ local function expandGate(remap, instructions, name, enablePrint)
                 if rightIndex == index then stack[#stack+1] = inst["b"] end
 
                 if enablePrint then
-                    if remap[inst["a"]] == nil then io.write(inst["a"], " ")
-                    else io.write(remap[inst["a"]], " ") end
+                    io.write(remap[inst["a"]], " ", inst["a"], " | ")
+                    io.write(inst["op"], " | ")
+                    io.write(remap[inst["b"]], " ", inst["b"], " | ")
+                    io.write(remap[inst["c"]], " ", inst["c"], " | ")
 
-                    io.write(inst["op"], " ")
-
-                    if remap[inst["b"]] == nil then io.write(inst["b"], " ")
-                    else io.write(remap[inst["b"]], " ") end
-
-                    if remap[inst["c"]] == nil then io.write(inst["c"], " ")
-                    else io.write(remap[inst["c"]], " ") end
-
-                    io.write(leftIndex, ", ", rightIndex)
                     io.write("\n")
                 end
             end
@@ -208,18 +201,34 @@ local x = getNumber(input["gates"], "(x..)")
 print("x =", x)
 local y = getNumber(input["gates"], "(y..)")
 print("y =", y)
-print("z =", part1)
+print("actual: ", part1)
 print("expected: ", x + y)
 
+-- For part two, look at bitwise difference between actual and expected outputs
+-- and expand on the gate with the name "z" + bit index to debug the wiring.
+-- Use a diagram of a full adder to diagnose the errors
 print()
 input = getInput(utils.getData(inputFile))
 local renamed = renameSimulation(input["gates"], utils.copyTable(input["instructions"]))
-local numGates = 0
-local numRemaped = 0
-for _, _ in pairs(input["gates"]) do numGates = numGates + 1 end
-for _, _ in pairs(renamed) do numRemaped = numRemaped + 1 end
-local C2 = ""
-for k, v in pairs(renamed) do if string.sub(v, 1, 1) == "C" then print(k,v) end end
-print(C2)
-expandGate(utils.copyTable(renamed), utils.copyTable(input["instructions"]), "z08", true)
+expandGate(utils.copyTable(renamed), utils.copyTable(input["instructions"]), "z35", true)
 
+--[[
+-- Gates to swap:
+-- On z8: gvw qjb
+-- On z15: z15 jgc
+-- On z22: z22 drg 
+-- On z35: z35 jbp
+--]]
+
+local part2 = {
+    "gvw", "qjb",
+    "z15", "jgc",
+    "z22", "drg",
+    "z35", "jbp"
+}
+table.sort(part2)
+for i, name in pairs(part2) do
+    io.write(name)
+    if i ~= #part2 then io.write(",") end
+end
+io.write("\n")
